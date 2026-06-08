@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Rentabilizaciones 2026 — Biopure Chile</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+  :root {
+    --navy: #0f1e3d;
+    --navy2: #162447;
+    --blue: #1a4fa0;
+    --accent: #3b82f6;
+    --accent2: #60a5fa;
+    --green: #10b981;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --bg: #080f23;
+    --card: #0d1a35;
+    --card2: #112040;
+    --border: rgba(59,130,246,0.18);
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background */
+  body::before {
+    content:'';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 20%, rgba(26,79,160,0.15) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 80%, rgba(59,130,246,0.10) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper { position: relative; z-index: 1; padding: 0 0 60px 0; }
+
+  /* ─── HEADER ─────────────────────────────────────────────────────── */
+  header {
+    background: linear-gradient(135deg, #0a1628 0%, #162447 50%, #0f2057 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 32px 48px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(20px);
+  }
+
+  header .brand { display:flex; align-items:center; gap:16px; }
+  header .logo {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, var(--accent), #2563eb);
+    border-radius: 12px;
+    display: flex; align-items:center; justify-content:center;
+    font-size: 20px;
+    box-shadow: 0 0 20px rgba(59,130,246,0.4);
+  }
+  header h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.3px; }
+  header h1 span { color: var(--accent2); }
+  header .subtitle { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+  header .badge {
+    background: rgba(16,185,129,0.15);
+    border: 1px solid rgba(16,185,129,0.3);
+    color: var(--green);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    animation: pulse-green 2s infinite;
+  }
+  @keyframes pulse-green {
+    0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.3); }
+    50% { box-shadow: 0 0 0 6px rgba(16,185,129,0); }
+  }
+
+  /* ─── FILTERS ─────────────────────────────────────────────────────── */
+  .filters-bar {
+    padding: 20px 48px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .filters-bar label { font-size: 0.75rem; color: var(--muted); font-weight: 500; }
+
+  .filter-btn {
+    padding: 8px 18px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--muted);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+  }
+  .filter-btn:hover { border-color: var(--accent); color: var(--accent2); background: rgba(59,130,246,0.08); }
+  .filter-btn.active {
+    background: linear-gradient(135deg, var(--accent), #2563eb);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(59,130,246,0.35);
+  }
+
+  .divider { width:1px; height:24px; background: var(--border); margin: 0 4px; }
+
+  /* ─── SECTION LABEL ──────────────────────────────────────────────── */
+  .section { padding: 0 48px; margin-bottom: 32px; }
+  .section-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title::after { content:''; flex:1; height:1px; background: var(--border); }
+
+  /* ─── KPI CARDS ───────────────────────────────────────────────────── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+  }
+
+  .kpi-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px 20px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: default;
+  }
+  .kpi-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(59,130,246,0.15);
+    border-color: rgba(59,130,246,0.35);
+  }
+  .kpi-card::before {
+    content:'';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 16px 16px 0 0;
+  }
+  .kpi-card.blue::before { background: linear-gradient(90deg, var(--accent), #60a5fa); }
+  .kpi-card.green::before { background: linear-gradient(90deg, var(--green), #34d399); }
+  .kpi-card.yellow::before { background: linear-gradient(90deg, var(--yellow), #fbbf24); }
+  .kpi-card.purple::before { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+  .kpi-card.teal::before  { background: linear-gradient(90deg, #14b8a6, #2dd4bf); }
+
+  .kpi-icon {
+    font-size: 1.4rem;
+    margin-bottom: 12px;
+    display: block;
+  }
+  .kpi-label { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); }
+  .kpi-value { font-size: 1.7rem; font-weight: 800; margin-top: 6px; letter-spacing: -1px; }
+  .kpi-card.blue .kpi-value { color: var(--accent2); }
+  .kpi-card.green .kpi-value { color: #34d399; }
+  .kpi-card.yellow .kpi-value { color: #fbbf24; }
+  .kpi-card.purple .kpi-value { color: #a78bfa; }
+  .kpi-card.teal .kpi-value  { color: #2dd4bf; }
+  .kpi-sub { font-size: 0.7rem; color: var(--muted); margin-top: 4px; }
+
+  /* ─── CHARTS ROW ──────────────────────────────────────────────────── */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 20px;
+  }
+
+  .chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    transition: box-shadow 0.2s;
+  }
+  .chart-card:hover { box-shadow: 0 8px 32px rgba(59,130,246,0.1); }
+  .chart-title { font-size: 0.85rem; font-weight: 700; margin-bottom: 4px; }
+  .chart-sub { font-size: 0.72rem; color: var(--muted); margin-bottom: 20px; }
+  .chart-wrap { position: relative; height: 220px; }
+
+  /* ─── TABLE ───────────────────────────────────────────────────────── */
+  .table-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .table-header {
+    padding: 18px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .table-header h3 { font-size: 0.9rem; font-weight: 700; }
+  .table-header span { font-size: 0.72rem; color: var(--muted); }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    padding: 12px 16px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: rgba(255,255,255,0.02);
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  thead th:first-child { text-align: left; padding-left: 24px; }
+
+  tbody tr {
+    transition: background 0.15s;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+  tbody tr:hover { background: rgba(59,130,246,0.05); }
+  tbody tr:last-child { border-bottom: none; }
+
+  tbody td {
+    padding: 12px 16px;
+    font-size: 0.82rem;
+    text-align: center;
+    color: var(--text);
+  }
+  tbody td:first-child { text-align: left; padding-left: 24px; font-weight: 500; }
+
+  .pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .pill.green  { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.2); }
+  .pill.yellow { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.2); }
+  .pill.red    { background: rgba(239,68,68,0.12);  color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
+
+  .trend-up   { color: #34d399; font-size: 0.75rem; }
+  .trend-down { color: #f87171; font-size: 0.75rem; }
+
+  tbody tr.total-row td {
+    background: rgba(59,130,246,0.08);
+    font-weight: 700;
+    color: var(--accent2);
+    border-top: 1px solid rgba(59,130,246,0.2);
+  }
+
+  /* ─── BOTTOM GRID ─────────────────────────────────────────────────── */
+  .bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  /* ─── FOOTER ──────────────────────────────────────────────────────── */
+  footer {
+    text-align: center;
+    padding: 32px;
+    font-size: 0.72rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+  }
+
+  /* ─── ANIMATIONS ──────────────────────────────────────────────────── */
+  .fade-in { animation: fadeIn 0.6s ease both; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+  .delay-5 { animation-delay: 0.5s; }
+
+  /* ─── RESPONSIVE ──────────────────────────────────────────────────── */
+  @media (max-width: 1100px) {
+    .kpi-grid { grid-template-columns: repeat(3,1fr); }
+    .charts-grid, .bottom-grid { grid-template-columns: 1fr; }
+    header, .filters-bar, .section { padding-left: 24px; padding-right: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN OVERLAY -->
+<div id="loginOverlay" style="
+  position:fixed; inset:0; z-index:9999;
+  background: linear-gradient(135deg, #080f23 0%, #0f1e3d 60%, #0a1628 100%);
+  display:flex; align-items:center; justify-content:center;
+">
+  <div style="
+    background:#0d1a35; border:1px solid rgba(59,130,246,0.25);
+    border-radius:20px; padding:48px 40px; width:360px;
+    box-shadow:0 24px 80px rgba(0,0,0,0.5);
+    text-align:center;
+  ">
+    <div style="
+      width:56px; height:56px; margin:0 auto 20px;
+      background:linear-gradient(135deg,#3b82f6,#2563eb);
+      border-radius:14px; display:flex; align-items:center; justify-content:center;
+      font-size:24px; box-shadow:0 0 24px rgba(59,130,246,0.4);
+    ">💧</div>
+    <h2 style="font-family:'Inter',sans-serif; font-size:1.2rem; font-weight:700; color:#e2e8f0; margin-bottom:6px;">Biopure Chile</h2>
+    <p style="font-family:'Inter',sans-serif; font-size:0.78rem; color:#94a3b8; margin-bottom:28px;">Dashboard Rentabilizaciones 2026 · Acceso restringido</p>
+    <input id="pwdInput" type="password" placeholder="Ingresa la clave" onkeydown="if(event.key==='Enter')checkPwd()" style="
+      width:100%; padding:12px 16px; border-radius:10px;
+      border:1px solid rgba(59,130,246,0.25); background:#162447;
+      color:#e2e8f0; font-family:'Inter',sans-serif; font-size:0.9rem;
+      outline:none; margin-bottom:12px; box-sizing:border-box;
+      transition:border-color 0.2s;
+    " onfocus="this.style.borderColor='rgba(59,130,246,0.7)'" onblur="this.style.borderColor='rgba(59,130,246,0.25)'">
+    <div id="pwdError" style="font-family:'Inter',sans-serif; font-size:0.75rem; color:#f87171; margin-bottom:10px; min-height:18px;"></div>
+    <button onclick="checkPwd()" style="
+      width:100%; padding:13px; border-radius:10px; border:none; cursor:pointer;
+      background:linear-gradient(135deg,#3b82f6,#2563eb); color:#fff;
+      font-family:'Inter',sans-serif; font-size:0.9rem; font-weight:600;
+      letter-spacing:0.3px; box-shadow:0 4px 16px rgba(59,130,246,0.35);
+      transition:opacity 0.2s;
+    " onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">Ingresar →</button>
+  </div>
+</div>
+
+<script>
+function checkPwd() {
+  const val = document.getElementById('pwdInput').value;
+  if (val === 'clasesdeclaude') {
+    const overlay = document.getElementById('loginOverlay');
+    overlay.style.transition = 'opacity 0.4s';
+    overlay.style.opacity = '0';
+    setTimeout(() => overlay.remove(), 400);
+  } else {
+    const err = document.getElementById('pwdError');
+    err.textContent = 'Clave incorrecta. Intenta de nuevo.';
+    const input = document.getElementById('pwdInput');
+    input.style.borderColor = 'rgba(239,68,68,0.6)';
+    input.value = '';
+    input.focus();
+    setTimeout(() => { err.textContent=''; input.style.borderColor='rgba(59,130,246,0.25)'; }, 2500);
+  }
+}
+</script>
+
+<div class="wrapper">
+
+<!-- HEADER -->
+<header>
+  <div class="brand">
+    <div class="logo">💧</div>
+    <div>
+      <h1>Biopure <span>Chile</span> · Dashboard 2026</h1>
+      <div class="subtitle">Rentabilizaciones de Campañas Google Ads · Enero – Abril 2026</div>
+    </div>
+  </div>
+  <div class="badge">● DATOS EN VIVO</div>
+</header>
+
+<!-- FILTERS -->
+<div class="filters-bar fade-in">
+  <label>PERÍODO</label>
+  <button class="filter-btn month-btn active" onclick="filterMonth('all',this)">Todos los meses</button>
+  <button class="filter-btn month-btn" onclick="filterMonth('ENE',this)">Enero</button>
+  <button class="filter-btn month-btn" onclick="filterMonth('FEB',this)">Febrero</button>
+  <button class="filter-btn month-btn" onclick="filterMonth('MAR',this)">Marzo</button>
+  <button class="filter-btn month-btn" onclick="filterMonth('ABR',this)">Abril</button>
+  <div class="divider"></div>
+  <label>CAMPAÑA</label>
+  <button class="filter-btn camp-btn active" onclick="filterCampaign('all',this)">Todas</button>
+  <button class="filter-btn camp-btn" onclick="filterCampaign('SECADORES DE MANOS',this)">Secadores</button>
+  <button class="filter-btn camp-btn" onclick="filterCampaign('DEA',this)">DEA</button>
+  <button class="filter-btn camp-btn" onclick="filterCampaign('PMAX',this)">PMAX</button>
+</div>
+
+<!-- KPIs -->
+<div class="section fade-in delay-1">
+  <div class="section-title">Resumen Acumulado ENE–ABR 2026</div>
+  <div class="kpi-grid">
+    <div class="kpi-card blue">
+      <span class="kpi-icon">💰</span>
+      <div class="kpi-label">Total Invertido</div>
+      <div class="kpi-value" data-count="10003619" data-prefix="$" data-format="currency">$0</div>
+      <div class="kpi-sub">Inversión en pauta Google Ads</div>
+    </div>
+    <div class="kpi-card teal">
+      <span class="kpi-icon">🎯</span>
+      <div class="kpi-label">Total Leads</div>
+      <div class="kpi-value" data-count="669" data-format="number">0</div>
+      <div class="kpi-sub">Leads generados</div>
+    </div>
+    <div class="kpi-card green">
+      <span class="kpi-icon">✅</span>
+      <div class="kpi-label">Total Cierres</div>
+      <div class="kpi-value" data-count="46" data-format="number">0</div>
+      <div class="kpi-sub">Contratos cerrados</div>
+    </div>
+    <div class="kpi-card yellow">
+      <span class="kpi-icon">📈</span>
+      <div class="kpi-label">% Cierre Promedio</div>
+      <div class="kpi-value" data-count="6.9" data-suffix="%" data-format="decimal">0%</div>
+      <div class="kpi-sub">Tasa de conversión</div>
+    </div>
+    <div class="kpi-card purple">
+      <span class="kpi-icon">🚀</span>
+      <div class="kpi-label">ROI Acumulado</div>
+      <div class="kpi-value" data-count="72799094" data-prefix="$" data-format="currency">$0</div>
+      <div class="kpi-sub">Retorno neto generado</div>
+    </div>
+  </div>
+</div>
+
+<!-- CHARTS -->
+<div class="section fade-in delay-2">
+  <div class="section-title">Evolución Mensual</div>
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">ROI vs Inversión por Mes</div>
+      <div class="chart-sub">Comparativo inversión en pauta vs retorno generado (CLP)</div>
+      <div class="chart-wrap"><canvas id="chartROI"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Rentabilidad % por Campaña</div>
+      <div class="chart-sub">Promedio ENE–ABR · Solo campañas con cierres</div>
+      <div class="chart-wrap"><canvas id="chartRent"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- TABLE RENTABILIDAD -->
+<div class="section fade-in delay-3">
+  <div class="section-title">Rentabilidad por Campaña y Mes</div>
+  <div class="table-card">
+    <div class="table-header">
+      <h3>Rentabilidad % — Detalle mensual</h3>
+      <span>Verde &gt; 5x · Amarillo 0–5x · Rojo sin cierres</span>
+    </div>
+    <table id="rentTable">
+      <thead>
+        <tr>
+          <th>Campaña</th>
+          <th data-month="ENE">ENE</th>
+          <th data-month="FEB">FEB</th>
+          <th data-month="MAR">MAR</th>
+          <th data-month="ABR">ABR</th>
+          <th class="col-promedio">Promedio</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr data-campaign="SECADORES DE MANOS">
+          <td>🖐️ Secadores de Manos</td>
+          <td data-month="ENE"><span class="pill yellow">1.36</span></td>
+          <td data-month="FEB"><span class="pill green">17.30</span></td>
+          <td data-month="MAR"><span class="pill yellow">2.03</span></td>
+          <td data-month="ABR"><span class="pill green">19.88</span></td>
+          <td class="col-promedio"><strong class="trend-up">▲ 10.14</strong></td>
+        </tr>
+        <tr data-campaign="AROMA">
+          <td>🌸 Aroma</td>
+          <td data-month="ENE"><span class="pill red">–</span></td>
+          <td data-month="FEB"><span class="pill green">16.12</span></td>
+          <td data-month="MAR"><span class="pill green">22.24</span></td>
+          <td data-month="ABR"><span class="pill red">–</span></td>
+          <td class="col-promedio"><strong class="trend-up">▲ 19.18*</strong></td>
+        </tr>
+        <tr data-campaign="CONTENEDORES">
+          <td>📦 Contenedores</td>
+          <td data-month="ENE"><span class="pill red">–</span></td>
+          <td data-month="FEB"><span class="pill red">–</span></td>
+          <td data-month="MAR"><span class="pill red">–</span></td>
+          <td data-month="ABR"><span class="pill red">–</span></td>
+          <td class="col-promedio"><strong class="trend-down">Sin cierres</strong></td>
+        </tr>
+        <tr data-campaign="MAQUINAS DE CAFÉ">
+          <td>☕ Máquinas de Café</td>
+          <td data-month="ENE"><span class="pill red">–</span></td>
+          <td data-month="FEB"><span class="pill red">–</span></td>
+          <td data-month="MAR"><span class="pill red">–</span></td>
+          <td data-month="ABR"><span class="pill red">–</span></td>
+          <td class="col-promedio"><strong class="trend-down">Sin cierres</strong></td>
+        </tr>
+        <tr data-campaign="DEA">
+          <td>💧 DEA</td>
+          <td data-month="ENE"><span class="pill green">9.84</span></td>
+          <td data-month="FEB"><span class="pill red">–</span></td>
+          <td data-month="MAR"><span class="pill green">24.21</span></td>
+          <td data-month="ABR"><span class="pill green">9.33</span></td>
+          <td class="col-promedio"><strong class="trend-up">▲ 14.46*</strong></td>
+        </tr>
+        <tr data-campaign="DISPENSADOR DE AGUA">
+          <td>🚰 Dispensador de Agua</td>
+          <td data-month="ENE"><span class="pill red">–</span></td>
+          <td data-month="FEB"><span class="pill green">13.63</span></td>
+          <td data-month="MAR"><span class="pill green">6.38</span></td>
+          <td data-month="ABR"><span class="pill red">–</span></td>
+          <td class="col-promedio"><strong class="trend-up">▲ 10.01*</strong></td>
+        </tr>
+        <tr data-campaign="PMAX">
+          <td>⚡ PMAX</td>
+          <td data-month="ENE"><span class="pill green">5.28</span></td>
+          <td data-month="FEB"><span class="pill yellow">3.48</span></td>
+          <td data-month="MAR"><span class="pill yellow">1.31</span></td>
+          <td data-month="ABR"><span class="pill yellow">1.31</span></td>
+          <td class="col-promedio"><strong class="trend-down">▼ 2.85</strong></td>
+        </tr>
+        <tr class="total-row">
+          <td>📊 TOTAL</td>
+          <td data-month="ENE">3.53</td>
+          <td data-month="FEB">8.17</td>
+          <td data-month="MAR">10.20</td>
+          <td data-month="ABR">7.13</td>
+          <td class="col-promedio">7.26</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- BOTTOM GRID -->
+<div class="section fade-in delay-4">
+  <div class="section-title">CPL y Volumen Mensual</div>
+  <div class="bottom-grid">
+
+    <!-- CPL TABLE -->
+    <div class="table-card">
+      <div class="table-header">
+        <h3>Costo por Lead (CPL)</h3>
+        <span>CLP por lead generado</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Campaña</th>
+            <th data-month="ENE">ENE</th><th data-month="FEB">FEB</th><th data-month="MAR">MAR</th><th data-month="ABR">ABR</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr data-campaign="SECADORES DE MANOS"><td>🖐️ Secadores</td>   <td data-month="ENE">$25.888</td><td data-month="FEB">$63.740</td><td data-month="MAR">$22.786</td><td data-month="ABR">$21.995</td></tr>
+          <tr data-campaign="AROMA">             <td>🌸 Aroma</td>        <td data-month="ENE">$26.592</td><td data-month="FEB">$40.691</td><td data-month="MAR">$30.856</td><td data-month="ABR">$33.636</td></tr>
+          <tr data-campaign="CONTENEDORES">      <td>📦 Contenedores</td> <td data-month="ENE">$18.011</td><td data-month="FEB">$10.099</td><td data-month="MAR">$13.637</td><td data-month="ABR">$13.510</td></tr>
+          <tr data-campaign="MAQUINAS DE CAFÉ">  <td>☕ Café</td>          <td data-month="ENE">$32.780</td><td data-month="FEB">$18.769</td><td data-month="MAR">$19.699</td><td data-month="ABR">$24.536</td></tr>
+          <tr data-campaign="DEA">               <td>💧 DEA</td>          <td data-month="ENE">$15.658</td><td data-month="FEB">$14.614</td><td data-month="MAR">$8.352</td> <td data-month="ABR">$16.097</td></tr>
+          <tr data-campaign="DISPENSADOR DE AGUA"><td>🚰 Dispensador</td> <td data-month="ENE">$9.837</td> <td data-month="FEB">$8.404</td> <td data-month="MAR">$9.715</td> <td data-month="ABR">$11.262</td></tr>
+          <tr data-campaign="PMAX">              <td>⚡ PMAX</td>         <td data-month="ENE">$18.216</td><td data-month="FEB">$9.490</td> <td data-month="MAR">$7.128</td> <td data-month="ABR">$9.721</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- VOLUME TABLE -->
+    <div class="table-card">
+      <div class="table-header">
+        <h3>Volumen Mensual — Total Campañas</h3>
+        <span>Acumulado todas las líneas</span>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Mes</th><th>Inversión</th><th>Leads</th><th>Cierres</th><th>% Cierre</th><th>ROI</th></tr>
+        </thead>
+        <tbody>
+          <tr data-month="ENE"><td><strong>ENE</strong></td><td>$2.479.807</td><td>139</td><td>10</td><td>7.2%</td><td class="trend-up">$8.749.193</td></tr>
+          <tr data-month="FEB"><td><strong>FEB</strong></td><td>$2.326.754</td><td>144</td><td>7</td> <td>4.9%</td><td class="trend-up">$19.011.382</td></tr>
+          <tr data-month="MAR"><td><strong>MAR</strong></td><td>$2.601.597</td><td>223</td><td>17</td><td>7.6%</td><td class="trend-up">$26.535.501</td></tr>
+          <tr data-month="ABR"><td><strong>ABR</strong></td><td>$2.595.461</td><td>163</td><td>12</td><td>7.4%</td><td class="trend-up">$18.504.018</td></tr>
+          <tr class="total-row">
+            <td>TOTAL</td><td>$10.003.619</td><td>669</td><td>46</td><td>6.8%</td><td>$72.800.094</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  Biopure Chile · Gerencia · Dashboard Rentabilizaciones 2026 · Fuente: Google Ads + HubSpot CRM · Actualizado abril 2026
+</footer>
+
+</div><!-- /wrapper -->
+
+<script>
+// ── DATA ───────────────────────────────────────────────────────────────────
+const MESES = ['ENE','FEB','MAR','ABR'];
+const MESES_LABEL = { ENE:'Enero', FEB:'Febrero', MAR:'Marzo', ABR:'Abril' };
+
+// Columna index en tablas: ENE=1, FEB=2, MAR=3, ABR=4
+const MES_COL = { ENE:1, FEB:2, MAR:3, ABR:4 };
+
+// KPIs por mes: [inversion, leads, cierres, pctCierre, roi]
+const kpiPorMes = {
+  ENE: { inversion:2479807, leads:139, cierres:10, pct:7.2,  roi:8749193  },
+  FEB: { inversion:2326754, leads:144, cierres:7,  pct:4.9,  roi:19011382 },
+  MAR: { inversion:2601597, leads:223, cierres:17, pct:7.6,  roi:26535501 },
+  ABR: { inversion:2595461, leads:163, cierres:12, pct:7.4,  roi:18504018 },
+};
+
+// Rentabilidad por campaña x mes (null = sin cierres)
+const rentData = {
+  'SECADORES DE MANOS': { ENE:1.36,  FEB:17.30, MAR:2.03,  ABR:19.88 },
+  'AROMA':              { ENE:null,  FEB:16.12, MAR:22.24, ABR:null  },
+  'CONTENEDORES':       { ENE:null,  FEB:null,  MAR:null,  ABR:null  },
+  'MAQUINAS DE CAFÉ':   { ENE:null,  FEB:null,  MAR:null,  ABR:null  },
+  'DEA':                { ENE:9.84,  FEB:null,  MAR:24.21, ABR:9.33  },
+  'DISPENSADOR DE AGUA':{ ENE:null,  FEB:13.63, MAR:6.38,  ABR:null  },
+  'PMAX':               { ENE:5.28,  FEB:3.48,  MAR:1.31,  ABR:1.31  },
+};
+
+// ROI por mes x campaña (null = 0 cierres)
+const roiCamp = {
+  'SECADORES DE MANOS': { ENE:847691,    FEB:9925341,  MAR:1298003,  ABR:12677484 },
+  'AROMA':              { ENE:-239324,   FEB:4591582,  MAR:6862998,  ABR:-302721  },
+  'CONTENEDORES':       { ENE:-54034,    FEB:-50497,   MAR:-54548,   ABR:-54039   },
+  'MAQUINAS DE CAFÉ':   { ENE:-163902,   FEB:-168922,  MAR:-196990,  ABR:-196284  },
+  'DEA':                { ENE:6472346,   FEB:-584573,  MAR:15975208, ABR:6160010  },
+  'DISPENSADOR DE AGUA':{ ENE:-324607,   FEB:4008575,  MAR:2108031,  ABR:-326594  },
+  'PMAX':               { ENE:2211023,   FEB:1289876,  MAR:542799,   ABR:546162   },
+};
+
+// Estado activo
+let activeMonth = 'all';
+let activeCampaign = 'all';
+
+// ── UTILS ──────────────────────────────────────────────────────────────────
+function fmt(n) { return '$' + Math.round(n).toLocaleString('es-CL'); }
+
+function getActiveMeses() {
+  return activeMonth === 'all' ? MESES : [activeMonth];
+}
+
+function getActiveCampaigns() {
+  return activeCampaign === 'all'
+    ? Object.keys(rentData)
+    : Object.keys(rentData).filter(c => c === activeCampaign);
+}
+
+function calcKPIs() {
+  const meses = getActiveMeses();
+  const camps = getActiveCampaigns();
+  let inversion = 0, leads = 0, cierres = 0, roi = 0;
+
+  if (activeCampaign === 'all') {
+    // usar totales por mes
+    meses.forEach(m => {
+      inversion += kpiPorMes[m].inversion;
+      leads     += kpiPorMes[m].leads;
+      cierres   += kpiPorMes[m].cierres;
+      roi       += kpiPorMes[m].roi;
+    });
+  } else {
+    // sumar solo la campaña seleccionada
+    camps.forEach(c => {
+      meses.forEach(m => {
+        const campInv = invCamp[c] ? (invCamp[c][m] || 0) : 0;
+        inversion += campInv;
+        roi += roiCamp[c][m] || 0;
+      });
+    });
+    // leads y cierres de la campaña
+    meses.forEach(m => {
+      leads   += leadsCamp[activeCampaign] ? (leadsCamp[activeCampaign][m] || 0) : 0;
+      cierres += cierresCamp[activeCampaign] ? (cierresCamp[activeCampaign][m] || 0) : 0;
+    });
+  }
+
+  const pct = cierres > 0 && leads > 0 ? (cierres / leads * 100) : 0;
+  return { inversion, leads, cierres, pct, roi };
+}
+
+// Inversión y leads/cierres por campaña x mes
+const invCamp = {
+  'SECADORES DE MANOS': { ENE:621309,  FEB:573659,  MAR:637997,  ABR:637843  },
+  'AROMA':              { ENE:239324,  FEB:284834,  MAR:308562,  ABR:302721  },
+  'CONTENEDORES':       { ENE:54034,   FEB:50497,   MAR:54548,   ABR:54039   },
+  'MAQUINAS DE CAFÉ':   { ENE:163902,  FEB:168922,  MAR:196990,  ABR:196284  },
+  'DEA':                { ENE:657654,  FEB:584573,  MAR:659792,  ABR:659990  },
+  'DISPENSADOR DE AGUA':{ ENE:324607,  FEB:294145,  MAR:330299,  ABR:326594  },
+  'PMAX':               { ENE:418977,  FEB:370124,  MAR:413409,  ABR:417990  },
+};
+const leadsCamp = {
+  'SECADORES DE MANOS': { ENE:24, FEB:9,  MAR:28, ABR:29 },
+  'AROMA':              { ENE:9,  FEB:7,  MAR:10, ABR:9  },
+  'CONTENEDORES':       { ENE:3,  FEB:5,  MAR:4,  ABR:4  },
+  'MAQUINAS DE CAFÉ':   { ENE:5,  FEB:9,  MAR:10, ABR:8  },
+  'DEA':                { ENE:42, FEB:40, MAR:79, ABR:41 },
+  'DISPENSADOR DE AGUA':{ ENE:33, FEB:35, MAR:34, ABR:29 },
+  'PMAX':               { ENE:23, FEB:39, MAR:58, ABR:43 },
+};
+const cierresCamp = {
+  'SECADORES DE MANOS': { ENE:2, FEB:4, MAR:3, ABR:7 },
+  'AROMA':              { ENE:0, FEB:1, MAR:2, ABR:0 },
+  'CONTENEDORES':       { ENE:0, FEB:0, MAR:0, ABR:0 },
+  'MAQUINAS DE CAFÉ':   { ENE:0, FEB:0, MAR:0, ABR:0 },
+  'DEA':                { ENE:5, FEB:0, MAR:10,ABR:4 },
+  'DISPENSADOR DE AGUA':{ ENE:0, FEB:1, MAR:1, ABR:0 },
+  'PMAX':               { ENE:3, FEB:1, MAR:1, ABR:1 },
+};
+
+// ── COUNTER ANIMATION ──────────────────────────────────────────────────────
+function animateValue(el, target, fmt_fn, duration=1200) {
+  const start = performance.now();
+  const from = parseFloat(el.dataset.current || 0);
+  el.dataset.current = target;
+  function update(now) {
+    const p = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    const val = from + (target - from) * ease;
+    el.textContent = fmt_fn(val);
+    if (p < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
+function updateKPICards() {
+  const d = calcKPIs();
+  const cards = document.querySelectorAll('.kpi-value');
+  animateValue(cards[0], d.inversion, v => '$' + Math.round(v).toLocaleString('es-CL'));
+  animateValue(cards[1], d.leads,     v => Math.round(v).toLocaleString('es-CL'));
+  animateValue(cards[2], d.cierres,   v => Math.round(v).toLocaleString('es-CL'));
+  animateValue(cards[3], d.pct,       v => v.toFixed(1) + '%');
+  animateValue(cards[4], d.roi,       v => '$' + Math.round(v).toLocaleString('es-CL'));
+}
+
+// ── FILTERS ────────────────────────────────────────────────────────────────
+function filterMonth(month, btn) {
+  activeMonth = month;
+  document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
+function filterCampaign(campaign, btn) {
+  activeCampaign = campaign;
+  document.querySelectorAll('.camp-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
+function applyFilters() {
+  const meses = getActiveMeses();
+
+  // 1. Mostrar/ocultar columnas de mes en todas las tablas con data-month
+  document.querySelectorAll('[data-month]').forEach(el => {
+    const m = el.dataset.month;
+    el.style.display = (activeMonth === 'all' || m === activeMonth) ? '' : 'none';
+  });
+
+  // 2. Mostrar/ocultar filas por campaña
+  document.querySelectorAll('tr[data-campaign]').forEach(row => {
+    const c = row.dataset.campaign;
+    row.style.display = (activeCampaign === 'all' || c === activeCampaign) ? '' : 'none';
+  });
+
+  // 3. Actualizar KPI cards
+  updateKPICards();
+
+  // 4. Actualizar gráficos
+  updateCharts();
+
+  // 5. Actualizar subtítulo
+  const mesLabel = activeMonth === 'all' ? 'Enero – Abril 2026' : MESES_LABEL[activeMonth] + ' 2026';
+  const campLabel = activeCampaign === 'all' ? 'Todas las campañas' : activeCampaign;
+  document.querySelector('header .subtitle').textContent =
+    `Google Ads · ${campLabel} · ${mesLabel}`;
+}
+
+// ── CHARTS ─────────────────────────────────────────────────────────────────
+let chartROI, chartRent;
+
+function buildCharts() {
+  const ctx1 = document.getElementById('chartROI').getContext('2d');
+  chartROI = new Chart(ctx1, {
+    type: 'bar',
+    data: getROIChartData(),
+    options: roiChartOptions(),
+  });
+
+  const ctx2 = document.getElementById('chartRent').getContext('2d');
+  chartRent = new Chart(ctx2, {
+    type: 'bar',
+    data: getRentChartData(),
+    options: rentChartOptions(),
+  });
+}
+
+function getROIChartData() {
+  const meses = getActiveMeses();
+  let invArr = [], roiArr = [];
+
+  if (activeCampaign === 'all') {
+    meses.forEach(m => {
+      invArr.push(kpiPorMes[m].inversion);
+      roiArr.push(kpiPorMes[m].roi);
+    });
+  } else {
+    meses.forEach(m => {
+      invArr.push(invCamp[activeCampaign][m] || 0);
+      roiArr.push(roiCamp[activeCampaign][m] || 0);
+    });
+  }
+
+  return {
+    labels: meses.map(m => MESES_LABEL[m]),
+    datasets: [
+      {
+        label: 'Inversión',
+        data: invArr,
+        backgroundColor: 'rgba(59,130,246,0.3)',
+        borderColor: 'rgba(59,130,246,1)',
+        borderWidth: 2,
+        borderRadius: 6,
+        order: 2,
+      },
+      {
+        label: 'ROI',
+        data: roiArr,
+        type: 'line',
+        borderColor: 'rgba(16,185,129,1)',
+        backgroundColor: 'rgba(16,185,129,0.1)',
+        borderWidth: 3,
+        pointBackgroundColor: 'rgba(16,185,129,1)',
+        pointRadius: 5,
+        tension: 0.4,
+        fill: true,
+        order: 1,
+      }
+    ]
+  };
+}
+
+function getRentChartData() {
+  const meses = getActiveMeses();
+  const camps = getActiveCampaigns().filter(c => {
+    return meses.some(m => rentData[c][m] !== null);
+  });
+
+  const values = camps.map(c => {
+    const vals = meses.map(m => rentData[c][m]).filter(v => v !== null);
+    return vals.length ? vals.reduce((a,b) => a+b, 0) / vals.length : 0;
+  });
+
+  const shortName = {
+    'SECADORES DE MANOS':'Secadores','AROMA':'Aroma','CONTENEDORES':'Contenedores',
+    'MAQUINAS DE CAFÉ':'Café','DEA':'DEA','DISPENSADOR DE AGUA':'Dispensador','PMAX':'PMAX'
+  };
+
+  return {
+    labels: camps.map(c => shortName[c] || c),
+    datasets: [{
+      label: 'Rentabilidad promedio',
+      data: values,
+      backgroundColor: values.map(v =>
+        v > 10 ? 'rgba(16,185,129,0.7)' : v > 5 ? 'rgba(245,158,11,0.7)' : 'rgba(139,92,246,0.7)'
+      ),
+      borderColor: values.map(v =>
+        v > 10 ? 'rgba(16,185,129,1)' : v > 5 ? 'rgba(20,184,166,1)' : 'rgba(139,92,246,1)'
+      ),
+      borderWidth: 2,
+      borderRadius: 6,
+    }]
+  };
+}
+
+function roiChartOptions() {
+  return {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { labels: { color:'#94a3b8', font:{family:'Inter',size:11}, boxWidth:12 } },
+      tooltip: {
+        backgroundColor:'#0d1a35', borderColor:'rgba(59,130,246,0.3)', borderWidth:1,
+        titleColor:'#e2e8f0', bodyColor:'#94a3b8',
+        callbacks: { label: ctx => ' ' + ctx.dataset.label + ': $' + ctx.parsed.y.toLocaleString('es-CL') }
+      }
+    },
+    scales: {
+      x: { ticks:{color:'#94a3b8',font:{family:'Inter',size:11}}, grid:{color:'rgba(255,255,255,0.04)'} },
+      y: { ticks:{color:'#94a3b8',font:{family:'Inter',size:10},callback:v=>'$'+Math.round(v/1e6)+'M'}, grid:{color:'rgba(255,255,255,0.04)'} }
+    }
+  };
+}
+
+function rentChartOptions() {
+  return {
+    indexAxis: 'y',
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display:false },
+      tooltip: {
+        backgroundColor:'#0d1a35', borderColor:'rgba(59,130,246,0.3)', borderWidth:1,
+        titleColor:'#e2e8f0', bodyColor:'#94a3b8',
+        callbacks: { label: ctx => ' Rentabilidad: ' + ctx.parsed.x.toFixed(2) + 'x' }
+      }
+    },
+    scales: {
+      x: { ticks:{color:'#94a3b8',font:{family:'Inter',size:10},callback:v=>v+'x'}, grid:{color:'rgba(255,255,255,0.04)'} },
+      y: { ticks:{color:'#94a3b8',font:{family:'Inter',size:11}}, grid:{display:false} }
+    }
+  };
+}
+
+function updateCharts() {
+  if (!chartROI || !chartRent) return;
+  const d1 = getROIChartData();
+  chartROI.data.labels = d1.labels;
+  chartROI.data.datasets[0].data = d1.datasets[0].data;
+  chartROI.data.datasets[1].data = d1.datasets[1].data;
+  chartROI.update('active');
+
+  const d2 = getRentChartData();
+  chartRent.data.labels = d2.labels;
+  chartRent.data.datasets[0].data = d2.datasets[0].data;
+  chartRent.data.datasets[0].backgroundColor = d2.datasets[0].backgroundColor;
+  chartRent.data.datasets[0].borderColor = d2.datasets[0].borderColor;
+  chartRent.update('active');
+}
+
+window.addEventListener('load', () => {
+  buildCharts();
+  setTimeout(updateKPICards, 300);
+});
+</script>
+</body>
+</html>
